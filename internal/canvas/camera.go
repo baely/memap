@@ -7,7 +7,7 @@ import (
 	"github.com/baely/memap/internal/util"
 )
 
-func (r *Renderer) DrawPath(path models.Path) {
+func (r *Renderer) DrawPath(path *models.Path) {
 	// Draw paths
 	for i, node := range path.Nodes {
 		if i == len(path.Nodes)-1 {
@@ -23,7 +23,7 @@ func (r *Renderer) DrawPath(path models.Path) {
 	}
 }
 
-func (r *Renderer) DrawPathLabel(path models.Path) {
+func (r *Renderer) DrawPathLabel(path *models.Path) {
 	distance := 0.0
 	for i, node := range path.Nodes {
 		if i == len(path.Nodes)-1 {
@@ -83,12 +83,12 @@ func (r *Renderer) DrawPathLabel(path models.Path) {
 	}
 }
 
-func (r *Renderer) DrawNode(node models.Node) {
+func (r *Renderer) DrawNode(node *models.Node) {
 	x, y := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
 	r.DrawCircle(x, y, 12, "white")
 }
 
-func (r *Renderer) DrawNodeLabel(node models.Node) {
+func (r *Renderer) DrawNodeLabel(node *models.Node) {
 	x, y := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
 
 	width := r.MeasureText(node.Label, 22) + 12

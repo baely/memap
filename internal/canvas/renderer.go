@@ -15,7 +15,7 @@ type Renderer struct {
 	ctx    js.Value
 
 	// Map fields
-	CurrentMap models.Map
+	CurrentMap *models.Map
 
 	// Batching fields
 	batcher js.Value
@@ -33,7 +33,7 @@ type Renderer struct {
 	SelectedPath *models.Path
 }
 
-func NewRenderer(m models.Map) *Renderer {
+func NewRenderer(m *models.Map) *Renderer {
 	return &Renderer{
 		batch:      make([][]interface{}, 0),
 		CurrentMap: m,
@@ -72,7 +72,10 @@ func (r *Renderer) DrawFromJS(this js.Value, args []js.Value) interface{} {
 func (r *Renderer) Draw() {
 	r.Clear()
 	r.DrawMap()
+	r.SendBatch()
+}
 
+func (r *Renderer) SendBatch() {
 	batch, _ := json.Marshal(r.batch)
 	r.batcher.Invoke(string(batch))
 	r.batch = [][]interface{}{}
@@ -113,7 +116,6 @@ func (r *Renderer) DrawCircle(x, y int, radius int, strokeStyle string) {
 	r.arc(x, y, radius, 0, 2*math.Pi)
 	r.setFillStyle(strokeStyle)
 	r.fill()
-
 }
 
 func (r *Renderer) DrawRect(x, y, width, height int, style string) {

@@ -16,7 +16,7 @@ func GetScaleXY(lat, lon float64, zoom float64) (float64, float64) {
 	return scaleX, scaleY
 }
 
-func TranslateToPosition(lat, lon float64, zoom float64, width, height int, pos models.Position) (int, int) {
+func TranslateToPosition(lat, lon float64, zoom float64, width, height int, pos *models.Position) (int, int) {
 	scaleX, scaleY := GetScaleXY(lat, lon, zoom)
 
 	x := int(scaleX*(pos.Longitude-lon)) + width/2
@@ -32,7 +32,7 @@ func TranslateToLatLon(lat, lon float64, zoom float64, width, height int, x, y i
 	return outLat, outLon
 }
 
-func Distance(pos1, pos2 models.Position) float64 {
+func Distance(pos1, pos2 *models.Position) float64 {
 	const R = 6371e3 // Earth radius in meters
 
 	lat1 := pos1.Latitude * math.Pi / 180.0

@@ -8,7 +8,7 @@ type Position struct {
 type Node struct {
 	Id       int
 	Label    string
-	Position Position
+	Position *Position
 }
 
 type PathType string
@@ -22,11 +22,11 @@ type Path struct {
 	Id       int
 	Label    string
 	Type     PathType
-	Nodes    []Node
+	Nodes    []*Node
 	NodeRefs []int
 }
 
 type Map struct {
-	Paths []Path
-	Nodes []Node
+	Paths []*Path
+	Nodes []*Node
 }

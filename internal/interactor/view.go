@@ -8,7 +8,7 @@ import (
 	"github.com/baely/memap/internal/util"
 )
 
-type Viewer struct {
+type viewer struct {
 	// Canvas fields
 	canvas     js.Value
 	currentMap models.Map
@@ -23,18 +23,18 @@ type Viewer struct {
 	startX, startY     int
 }
 
-func NewViewer(renderer *canvas.Renderer) *Viewer {
-	return &Viewer{
+func newViewer(renderer *canvas.Renderer) *viewer {
+	return &viewer{
 		Renderer: renderer,
 	}
 }
 
-func (v *Viewer) Init(this js.Value, args []js.Value) interface{} {
+func (v *viewer) Init(this js.Value, args []js.Value) interface{} {
 	v.canvas = args[0]
 	return v
 }
 
-func (v *Viewer) MouseDown(this js.Value, args []js.Value) interface{} {
+func (v *viewer) MouseDown(this js.Value, args []js.Value) interface{} {
 	event := args[0]
 	x := event.Get("clientX").Int()
 	y := event.Get("clientY").Int()
@@ -52,7 +52,7 @@ func (v *Viewer) MouseDown(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func (v *Viewer) MouseMove(this js.Value, args []js.Value) interface{} {
+func (v *viewer) MouseMove(this js.Value, args []js.Value) interface{} {
 	if !v.holding {
 		return nil
 	}
@@ -86,7 +86,7 @@ func (v *Viewer) MouseMove(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func (v *Viewer) MouseUp(this js.Value, args []js.Value) interface{} {
+func (v *viewer) MouseUp(this js.Value, args []js.Value) interface{} {
 	event := args[0]
 	x := event.Get("clientX").Int()
 	y := event.Get("clientY").Int()
@@ -103,7 +103,7 @@ func (v *Viewer) MouseUp(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func (v *Viewer) MouseLeave(this js.Value, args []js.Value) interface{} {
+func (v *viewer) MouseLeave(this js.Value, args []js.Value) interface{} {
 	v.panning = false
 	v.holding = false
 	v.canvas.Get("style").Set("cursor", "grab")
@@ -111,7 +111,7 @@ func (v *Viewer) MouseLeave(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func (v *Viewer) Wheel(this js.Value, args []js.Value) interface{} {
+func (v *viewer) Wheel(this js.Value, args []js.Value) interface{} {
 	event := args[0]
 	deltaY := event.Get("deltaY").Int()
 
@@ -135,7 +135,7 @@ func (v *Viewer) Wheel(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func (v *Viewer) ButtonPress(this js.Value, args []js.Value) interface{} {
+func (v *viewer) ButtonPress(this js.Value, args []js.Value) interface{} {
 	button := args[0]
 
 	js.Global().Get("console").Call("log", "Button pressed:", button)
@@ -143,7 +143,7 @@ func (v *Viewer) ButtonPress(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func (v *Viewer) click(x, y int) {
+func (v *viewer) click(x, y int) {
 	const threshold2 = 144 // 12px squared
 
 	v.SelectedNode = nil
@@ -159,7 +159,7 @@ func (v *Viewer) click(x, y int) {
 		distance2 := dx*dx + dy*dy
 
 		if distance2 <= threshold2 {
-			v.SelectedNode = &node
+			v.SelectedNode = node
 			break
 		}
 	}
@@ -176,10 +176,10 @@ func (v *Viewer) click(x, y int) {
 			x1, y1 := util.TranslateToPosition(v.Lat, v.Lon, v.Zoom, v.Width, v.Height, node.Position)
 			x2, y2 := util.TranslateToPosition(v.Lat, v.Lon, v.Zoom, v.Width, v.Height, nextNode.Position)
 
-			distance2 := distance2ToLine(x, y, x1, y1, x2, y2)
+			distance2, _, _ := distance2ToLine(x, y, x1, y1, x2, y2)
 
 			if distance2 <= threshold2 {
-				v.SelectedPath = &path
+				v.SelectedPath = path
 				break
 			}
 		}
@@ -192,12 +192,12 @@ func (v *Viewer) click(x, y int) {
 	v.Draw()
 }
 
-func distance2ToLine(x, y, x1, y1, x2, y2 int) int {
+func distance2ToLine(x, y, x1, y1, x2, y2 int) (int, int, int) {
 	dx := x2 - x1
 	dy := y2 - y1
 
 	if dx == 0 && dy == 0 {
-		return (x-x1)*(x-x1) + (y-y1)*(y-y1)
+		return (x-x1)*(x-x1) + (y-y1)*(y-y1), x1, y1
 	}
 
 	t := float64((x-x1)*dx+(y-y1)*dy) / float64(dx*dx+dy*dy)
@@ -209,5 +209,5 @@ func distance2ToLine(x, y, x1, y1, x2, y2 int) int {
 	fx := float64(x) - nearX
 	fy := float64(y) - nearY
 
-	return int(fx*fx + fy*fy)
+	return int(fx*fx + fy*fy), int(nearX), int(nearY)
 }

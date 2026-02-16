@@ -17,6 +17,10 @@ type Interactor interface {
 	ButtonPress(this js.Value, args []js.Value) interface{}
 }
 
-func New(EditMode bool, renderer *canvas.Renderer) Interactor {
-	return NewViewer(renderer)
+func New(editMode bool, renderer *canvas.Renderer) Interactor {
+	if editMode {
+		return newEditor(renderer)
+	}
+
+	return newViewer(renderer)
 }

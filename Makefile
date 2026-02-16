@@ -7,5 +7,5 @@ build-edit:
 build-all: build build-edit
 
 deploy: build-all
-	cp index.html map.js maps.wasm wasm_exec.js ./public
+	cp index.html map.js maps.wasm editor.wasm wasm_exec.js ./public
 	firebase deploy

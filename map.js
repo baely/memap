@@ -3,9 +3,16 @@ class MapView {
         this.root = root;
     }
 
-    init() {
+    init(editMode) {
+        this.editMode = editMode;
         this.initCanvas();
         this.initInputs();
+
+        if (editMode) {
+            this.initEditInputs();
+        } else {
+            this.initSidebarInputs();
+        }
     }
 
     initCanvas() {
@@ -47,13 +54,48 @@ class MapView {
         searchButton.textContent = "🔎";
 
         searchButton.addEventListener("click", () => {
-            engine.buttonPress("Search");
+            engine.buttonPress("search");
         });
 
         searchPanel.appendChild(searchInput);
         searchPanel.appendChild(searchButton);
 
         this.root.appendChild(searchPanel);
+    }
+
+    initSidebarInputs() {
+        const sidebarPanel = document.createElement("div");
+        sidebarPanel.classList.add("edit");
+
+        const editButton = document.createElement("button");
+        editButton.textContent = "✏️";
+        editButton.addEventListener("click", () => {
+            window.location.search = "?edit";
+        });
+        sidebarPanel.appendChild(editButton);
+
+        this.root.appendChild(sidebarPanel);
+    }
+
+    initEditInputs() {
+        const editPanel = document.createElement("div");
+        editPanel.classList.add("edit");
+
+        const downloadButton = document.createElement("button");
+        downloadButton.textContent = "⬇️";
+        downloadButton.addEventListener("click",  () => {
+            engine.buttonPress("download");
+        });
+        editPanel.appendChild(downloadButton);
+
+        const closeButton = document.createElement("button");
+        closeButton.textContent = "❌";
+        closeButton.addEventListener("click", () => {
+            window.location.search = "";
+        });
+        editPanel.appendChild(closeButton);
+
+        this.root.appendChild(editPanel);
     }
 
     drawBatch(rawBatch) {
@@ -73,12 +115,19 @@ class MapView {
 }
 
 const root = document.querySelector('#root');
+const params = new URLSearchParams(window.location.search);
+const editMode = params.has("edit");
+const wasmFile = editMode ? "./editor.wasm" : "./maps.wasm";
+
+if (editMode) {
+    document.title = "Bailey Maps - Editor";
+}
 
 const map = new MapView(root);
 
 const go = new Go();
-WebAssembly.instantiateStreaming(fetch("./maps.wasm"), go.importObject)
+WebAssembly.instantiateStreaming(fetch(wasmFile), go.importObject)
     .then((result) => {
         go.run(result.instance);
-        map.init();
+        map.init(editMode);
     });

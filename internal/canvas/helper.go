@@ -36,6 +36,12 @@ func (r *Renderer) setLineWidth(lineWidth int) {
 	})
 }
 
+func (r *Renderer) setLineDash(spaces ...float64) {
+	r.batch = append(r.batch, []interface{}{
+		"call", "setLineDash", spaces,
+	})
+}
+
 func (r *Renderer) setLineCap(lineCap string) {
 	r.batch = append(r.batch, []interface{}{
 		"set", "lineCap", lineCap,

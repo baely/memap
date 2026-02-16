@@ -16,6 +16,10 @@
             height: 100%;
         }
 
+        #root button:hover {
+            cursor: pointer;
+        }
+
         #root div.search {
             background-color: #fff;
             border-radius: 12px;
@@ -41,10 +45,40 @@
         #root div.search button {
             background-color: #084cc1;
             height: 100%;
-            border-radius: 12px;
+            border-radius: 0 12px 12px 0;
             border: 5px solid rgba(0, 0, 0, 0.2);
             width: 75px;
             font-size: 25px;
+        }
+
+        #root div.edit {
+            background-color: #fff;
+            border-radius: 12px;
+            width: 75px;
+            position: fixed;
+            bottom: 50px;
+            right: 50px;
+        }
+
+        #root div.edit button {
+            background-color: #d9d9d9;
+            height: 75px;
+            /*border-radius: 12px;*/
+            border: 5px solid rgba(0, 0, 0, 0.2);
+            width: 75px;
+            font-size: 25px;
+            margin-bottom: -5px;
+        }
+
+        #root div.edit button:first-child {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        #root div.edit button:last-child {
+            border-bottom-right-radius: 12px;
+            border-bottom-left-radius: 12px;
+            margin-bottom: 0;
         }
     </style>
 </head>
