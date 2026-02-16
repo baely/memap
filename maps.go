@@ -4,10 +4,11 @@ import (
 	"syscall/js"
 
 	"github.com/baely/memap/internal/canvas"
+	"github.com/baely/memap/internal/models"
 )
 
 func main() {
-	renderer := canvas.NewRenderer()
+	renderer := canvas.NewRenderer(models.SampleMap)
 
 	js.Global().Set("engine", map[string]interface{}{
 		"initRenderer":   js.FuncOf(renderer.Init),

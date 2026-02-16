@@ -12,7 +12,7 @@ class MapView {
         this.root.appendChild(canvas);
 
         this.ctx = canvas.getContext("2d");
-        engine.initRenderer(canvas, this.drawBatch.bind(this));
+        engine.initRenderer(canvas, this.drawBatch.bind(this), this.ctx);
 
         const ratio = window.devicePixelRatio || 1;
         let refreshSize = () => {

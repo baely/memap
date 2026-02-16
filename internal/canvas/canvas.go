@@ -16,7 +16,7 @@ func (r *Renderer) canvasMouseDown(this js.Value, args []js.Value) interface{} {
 	x := event.Get("clientX").Int()
 	y := event.Get("clientY").Int()
 
-	r.isPanning = true
+	r.holding = true
 
 	r.startX = x
 	r.startY = y
@@ -30,7 +30,7 @@ func (r *Renderer) canvasMouseDown(this js.Value, args []js.Value) interface{} {
 }
 
 func (r *Renderer) canvasMouseMove(this js.Value, args []js.Value) interface{} {
-	if !r.isPanning {
+	if !r.holding {
 		return nil
 	}
 
@@ -45,6 +45,16 @@ func (r *Renderer) canvasMouseMove(this js.Value, args []js.Value) interface{} {
 	deltaLat := float64(-deltaY) / scaleY
 	deltaLon := float64(deltaX) / scaleX
 
+	if !r.panning {
+		if deltaX*deltaX+deltaY*deltaY > 25 {
+			r.panning = true
+		}
+	}
+
+	if !r.panning {
+		return nil
+	}
+
 	r.lat = r.startLat - deltaLat
 	r.lon = r.startLon - deltaLon
 
@@ -54,14 +64,25 @@ func (r *Renderer) canvasMouseMove(this js.Value, args []js.Value) interface{} {
 }
 
 func (r *Renderer) canvasMouseUp(this js.Value, args []js.Value) interface{} {
-	r.isPanning = false
+	event := args[0]
+	x := event.Get("clientX").Int()
+	y := event.Get("clientY").Int()
+
+	if !r.panning {
+		// Click event
+		r.click(x, y)
+	}
+
+	r.holding = false
+	r.panning = false
 	r.canvas.Get("style").Set("cursor", "grab")
 
 	return nil
 }
 
 func (r *Renderer) canvasMouseLeave(this js.Value, args []js.Value) interface{} {
-	r.isPanning = false
+	r.panning = false
+	r.holding = false
 	r.canvas.Get("style").Set("cursor", "grab")
 
 	return nil
@@ -73,7 +94,7 @@ func (r *Renderer) canvasWheel(this js.Value, args []js.Value) interface{} {
 
 	const zoomSensitivity = 0.001
 
-	r.zoom += float64(deltaY) * zoomSensitivity
+	r.zoom -= float64(deltaY) * zoomSensitivity
 
 	const minZoom = 14.0
 	const maxZoom = 18.0

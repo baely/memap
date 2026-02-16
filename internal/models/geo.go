@@ -6,20 +6,24 @@ type Position struct {
 }
 
 type Node struct {
+	Id       int
 	Label    string
 	Position Position
 }
 
-type PathType int
+type PathType string
 
 const (
-	PathTypeRoad PathType = iota
-	PathTypeRailway
+	PathTypeRoad    PathType = "PathTypeRoad"
+	PathTypeRailway PathType = "PathTypeRailway"
 )
 
 type Path struct {
-	Type  PathType
-	Nodes []Node
+	Id       int
+	Label    string
+	Type     PathType
+	Nodes    []Node
+	NodeRefs []int
 }
 
 type Map struct {

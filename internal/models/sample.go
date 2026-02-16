@@ -83,76 +83,82 @@ var (
 	victoriaSwanston   = Node{Label: "Victoria & Swanston", Position: Position{-37.806481, 144.962391}}
 	victoriaRussell    = Node{Label: "Victoria & Russell", Position: Position{-37.806764, 144.965338}}
 	victoriaExhibition = Node{Label: "Victoria & Exhibition", Position: Position{-37.807048, 144.968284}}
+
+	// --- Other nodes ---
+	work = Node{Label: "Work", Position: Position{-37.816089, 144.961657}}
 )
 
 // --- Street paths ---
 
 var (
 	// East-west streets
-	flindersStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	flindersStreet = Path{Label: "Flinders Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersSpencer, flindersKing, flindersWilliam, flindersQueen,
 		flindersElizabeth, flindersSwanston, flindersRussell, flindersExhibition, flindersSpring,
 	}}
-	collinsStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	collinsStreet = Path{Label: "Collins Street", Type: PathTypeRoad, Nodes: []Node{
 		collinsSpencer, collinsKing, collinsWilliam, collinsQueen,
 		collinsElizabeth, collinsSwanston, collinsRussell, collinsExhibition, collinsSpring,
 	}}
-	bourkeStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	bourkeStreet = Path{Label: "Bourke Street", Type: PathTypeRoad, Nodes: []Node{
 		bourkeSpencer, bourkeKing, bourkeWilliam, bourkeQueen,
 		bourkeElizabeth, bourkeSwanston, bourkeRussell, bourkeExhibition, bourkeSpring,
 	}}
-	lonsdaleStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	lonsdaleStreet = Path{Label: "Lonsdale Street", Type: PathTypeRoad, Nodes: []Node{
 		lonsdaleSpencer, lonsdaleKing, lonsdaleWilliam, lonsdaleQueen,
 		lonsdaleElizabeth, lonsdaleSwanston, lonsdaleRussell, lonsdaleExhibition, lonsdaleSpring,
 	}}
-	laTrobeStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	laTrobeStreet = Path{Label: "La Trobe Street", Type: PathTypeRoad, Nodes: []Node{
 		laTrobeSpencer, laTrobeKing, laTrobeWilliam, laTrobeQueen,
 		laTrobeElizabeth, laTrobeSwanston, laTrobeRussell, laTrobeExhibition, laTrobeSpring,
 	}}
-	franklinStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	franklinStreet = Path{Label: "Franklin Street", Type: PathTypeRoad, Nodes: []Node{
 		franklinWilliam, franklinQueen, franklinElizabeth, franklinSwanston, franklinRussell, franklinVictoria,
 	}}
-	victoriaStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	victoriaStreet = Path{Label: "Victoria Street", Type: PathTypeRoad, Nodes: []Node{
 		victoriaPeel, victoriaQueen, victoriaElizabeth, victoriaSwanston, victoriaRussell, victoriaExhibition, laTrobeSpring,
 	}}
 
 	// North-south streets
-	spencerStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	spencerStreet = Path{Label: "Spencer Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersSpencer, collinsSpencer, bourkeSpencer, lonsdaleSpencer, laTrobeSpencer,
 	}}
-	kingStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	kingStreet = Path{Label: "King Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersKing, collinsKing, bourkeKing, lonsdaleKing, laTrobeKing,
 	}}
-	williamStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	williamStreet = Path{Label: "William Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersWilliam, collinsWilliam, bourkeWilliam, lonsdaleWilliam, laTrobeWilliam,
 		franklinWilliam, victoriaPeel,
 	}}
-	queenStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	queenStreet = Path{Label: "Queen Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersQueen, collinsQueen, bourkeQueen, lonsdaleQueen, laTrobeQueen,
 		franklinQueen, victoriaQueen,
 	}}
-	elizabethStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	elizabethStreet = Path{Label: "Elizabeth Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersElizabeth, collinsElizabeth, bourkeElizabeth, lonsdaleElizabeth, laTrobeElizabeth,
 		victoriaElizabeth,
 	}}
-	swanstonStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	swanstonStreet = Path{Label: "Swanston Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersSwanston, collinsSwanston, bourkeSwanston, lonsdaleSwanston, laTrobeSwanston,
 		victoriaSwanston,
 	}}
-	russellStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	russellStreet = Path{Label: "Russell Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersRussell, collinsRussell, bourkeRussell, lonsdaleRussell, laTrobeRussell,
 		victoriaRussell,
 	}}
-	exhibitionStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	exhibitionStreet = Path{Label: "Exhibition Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersExhibition, collinsExhibition, bourkeExhibition, lonsdaleExhibition, laTrobeExhibition,
 		victoriaExhibition,
 	}}
-	springStreet = Path{Type: PathTypeRoad, Nodes: []Node{
+	springStreet = Path{Label: "Spring Street", Type: PathTypeRoad, Nodes: []Node{
 		flindersSpring, collinsSpring, bourkeSpring, lonsdaleSpring, laTrobeSpring,
 	}}
 )
 
 var SampleMap = Map{
+	Nodes: []Node{
+		work,
+	},
 	Paths: []Path{
 		// East-west
 		flindersStreet, collinsStreet, bourkeStreet, lonsdaleStreet, laTrobeStreet,

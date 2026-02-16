@@ -2,6 +2,8 @@ package canvas
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
 	"syscall/js"
 
 	"github.com/baely/memap/internal/models"
@@ -10,6 +12,10 @@ import (
 type Renderer struct {
 	// Canvas fields
 	canvas js.Value
+	ctx    js.Value
+
+	// Map fields
+	currentMap models.Map
 
 	// Batching fields
 	batcher js.Value
@@ -23,28 +29,35 @@ type Renderer struct {
 	zoom     float64
 
 	// Panning fields
-	isPanning          bool
+	holding            bool
+	panning            bool
 	startLat, startLon float64
 	startX, startY     int
+
+	// Interaction fields
+	selectedNode *models.Node
+	selectedPath *models.Path
 }
 
-func NewRenderer() *Renderer {
+func NewRenderer(m models.Map) *Renderer {
 	return &Renderer{
-		batch: make([][]interface{}, 0),
+		batch:      make([][]interface{}, 0),
+		currentMap: m,
 
 		lat:  -37.814174,
 		lon:  144.963154,
-		zoom: 15.0,
+		zoom: 16.0,
 	}
 }
 
 func (r *Renderer) Init(this js.Value, args []js.Value) interface{} {
-	if len(args) != 2 {
+	if len(args) != 3 {
 		return nil
 	}
 
 	r.canvas = args[0]
 	r.batcher = args[1]
+	r.ctx = args[2]
 
 	r.addCanvasListeners()
 
@@ -69,12 +82,19 @@ func (r *Renderer) DrawFromJS(this js.Value, args []js.Value) interface{} {
 }
 
 func (r *Renderer) Draw() {
-	r.clear()
-	r.DrawMap(models.SampleMap)
+	r.Clear()
+	r.DrawMap()
 
 	batch, _ := json.Marshal(r.batch)
 	r.batcher.Invoke(string(batch))
 	r.batch = [][]interface{}{}
+}
+
+func (r *Renderer) Clear() {
+	r.beginPath()
+	r.rect(0, 0, r.width, r.height)
+	r.setFillStyle("#272727")
+	r.fill()
 }
 
 func (r *Renderer) DrawLine(x0, y0, x1, y1 int, width int, strokeStyle string) {
@@ -86,4 +106,40 @@ func (r *Renderer) DrawLine(x0, y0, x1, y1 int, width int, strokeStyle string) {
 	r.setLineCap("round")
 	r.setLineJoin("round")
 	r.stroke()
+}
+
+func (r *Renderer) DrawText(x, y int, text string, size int, angle float64, style string) {
+	r.save()
+	r.translate(x, y)
+	r.rotate(angle)
+	r.setFont(fmt.Sprintf("bold %fpx Arial", float64(size)))
+	r.setFillStyle(style)
+	r.setTextAlign("center")
+	r.setTextBaseline("middle")
+	r.fillText(text, 0, 0)
+	r.restore()
+}
+
+func (r *Renderer) DrawCircle(x, y int, radius int, strokeStyle string) {
+	r.beginPath()
+	r.arc(x, y, radius, 0, 2*math.Pi)
+	r.setFillStyle(strokeStyle)
+	r.fill()
+
+}
+
+func (r *Renderer) DrawRect(x, y, width, height int, style string) {
+	r.beginPath()
+	r.rect(x, y, width, height)
+	r.setFillStyle(style)
+	r.fill()
+}
+
+func (r *Renderer) MeasureText(text string, size int) int {
+	font := fmt.Sprintf("bold %fpx Arial", float64(size))
+	r.ctx.Set("font", font)
+
+	width := r.measureText(text)
+
+	return int(width)
 }

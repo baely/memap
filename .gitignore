@@ -1,4 +1,6 @@
+.firebase/*
 .idea/*
+public/*
 
 *.wasm
 wasm_exec.js
