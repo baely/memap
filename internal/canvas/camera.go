@@ -4,52 +4,8 @@ import (
 	"math"
 
 	"github.com/baely/memap/internal/models"
+	"github.com/baely/memap/internal/util"
 )
-
-func (r *Renderer) GetScaleXY() (float64, float64) {
-	const a = 1.9743504858348
-	const m = 50.0 / 27.0
-
-	scaleX := m * math.Pow(a, r.zoom)
-	scaleY := scaleX / math.Cos(r.lat*math.Pi/180.0)
-
-	return scaleX, scaleY
-}
-
-func (r *Renderer) TranslateToPosition(pos models.Position) (int, int) {
-	scaleX, scaleY := r.GetScaleXY()
-
-	x := int(scaleX*(pos.Longitude-r.lon)) + r.width/2
-	y := int(scaleY*(r.lat-pos.Latitude)) + r.height/2
-	return x, y
-}
-
-func (r *Renderer) TranslateToLatLon(x, y int) (float64, float64) {
-	scaleX, scaleY := r.GetScaleXY()
-
-	lon := float64(x-r.width/2)/scaleX + r.lon
-	lat := float64(r.height/2-y)/scaleY + r.lat
-	return lat, lon
-}
-
-func Distance(pos1, pos2 models.Position) float64 {
-	const R = 6371e3 // Earth radius in meters
-
-	lat1 := pos1.Latitude * math.Pi / 180.0
-	lat2 := pos2.Latitude * math.Pi / 180.0
-	deltaLat := (pos2.Latitude - pos1.Latitude) * math.Pi / 180.0
-	deltaLon := (pos2.Longitude - pos1.Longitude) * math.Pi / 180.0
-
-	a := math.Sin(deltaLat/2)*math.Sin(deltaLat/2) +
-		math.Cos(lat1)*math.Cos(lat2)*
-			math.Sin(deltaLon/2)*math.Sin(deltaLon/2)
-
-	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-
-	d := R * c
-
-	return d
-}
 
 func (r *Renderer) DrawPath(path models.Path) {
 	// Draw paths
@@ -60,8 +16,8 @@ func (r *Renderer) DrawPath(path models.Path) {
 
 		nextNode := path.Nodes[i+1]
 
-		x1, y1 := r.TranslateToPosition(node.Position)
-		x2, y2 := r.TranslateToPosition(nextNode.Position)
+		x1, y1 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
+		x2, y2 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, nextNode.Position)
 
 		r.DrawLine(x1, y1, x2, y2, 24, "white")
 	}
@@ -77,14 +33,14 @@ func (r *Renderer) DrawPathLabel(path models.Path) {
 		nextNode := path.Nodes[i+1]
 
 		// Check if line is visible
-		x1, y1 := r.TranslateToPosition(node.Position)
-		x2, y2 := r.TranslateToPosition(nextNode.Position)
+		x1, y1 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
+		x2, y2 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, nextNode.Position)
 
-		if (x1 < 0 && x2 < 0) || (x1 > r.width && x2 > r.width) || (y1 < 0 && y2 < 0) || (y1 > r.height && y2 > r.height) {
+		if (x1 < 0 && x2 < 0) || (x1 > r.Width && x2 > r.Width) || (y1 < 0 && y2 < 0) || (y1 > r.Height && y2 > r.Height) {
 			continue
 		}
 
-		distance += Distance(node.Position, nextNode.Position)
+		distance += util.Distance(node.Position, nextNode.Position)
 	}
 
 	midPoint := distance / 2
@@ -98,18 +54,18 @@ func (r *Renderer) DrawPathLabel(path models.Path) {
 		nextNode := path.Nodes[i+1]
 
 		// Check if line is visible
-		x1, y1 := r.TranslateToPosition(node.Position)
-		x2, y2 := r.TranslateToPosition(nextNode.Position)
+		x1, y1 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
+		x2, y2 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, nextNode.Position)
 
-		if (x1 < 0 && x2 < 0) || (x1 > r.width && x2 > r.width) || (y1 < 0 && y2 < 0) || (y1 > r.height && y2 > r.height) {
+		if (x1 < 0 && x2 < 0) || (x1 > r.Width && x2 > r.Width) || (y1 < 0 && y2 < 0) || (y1 > r.Height && y2 > r.Height) {
 			continue
 		}
 
-		currentDistance += Distance(node.Position, nextNode.Position)
+		currentDistance += util.Distance(node.Position, nextNode.Position)
 
 		if currentDistance >= midPoint {
-			x1, y1 := r.TranslateToPosition(node.Position)
-			x2, y2 := r.TranslateToPosition(nextNode.Position)
+			x1, y1 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
+			x2, y2 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, nextNode.Position)
 
 			midX := (x1 + x2) / 2
 			midY := (y1 + y2) / 2
@@ -128,12 +84,12 @@ func (r *Renderer) DrawPathLabel(path models.Path) {
 }
 
 func (r *Renderer) DrawNode(node models.Node) {
-	x, y := r.TranslateToPosition(node.Position)
+	x, y := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
 	r.DrawCircle(x, y, 12, "white")
 }
 
 func (r *Renderer) DrawNodeLabel(node models.Node) {
-	x, y := r.TranslateToPosition(node.Position)
+	x, y := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
 
 	width := r.MeasureText(node.Label, 22) + 12
 
@@ -141,16 +97,60 @@ func (r *Renderer) DrawNodeLabel(node models.Node) {
 	r.DrawText(x, y-24, node.Label, 22, 0, "black")
 }
 
+func (r *Renderer) DrawBorder() {
+	r.beginPath()
+	r.rect(0, 0, r.Width, r.Height)
+	r.setStrokeStyle("#D9D9D9")
+	r.setLineWidth(50)
+	r.stroke()
+
+	// Top left
+	r.beginPath()
+	r.moveTo(50, 25)
+	r.lineTo(25, 25)
+	r.lineTo(25, 50)
+	r.arc(50, 50, 25, math.Pi, 1.5*math.Pi)
+	r.setFillStyle("#D9D9D9")
+	r.fill()
+
+	// Top right
+	r.beginPath()
+	r.moveTo(r.Width-25, 50)
+	r.lineTo(r.Width-25, 25)
+	r.lineTo(r.Width-50, 25)
+	r.arc(r.Width-50, 50, 25, 1.5*math.Pi, 2*math.Pi)
+	r.setFillStyle("#D9D9D9")
+	r.fill()
+
+	// Bottom right
+	r.beginPath()
+	r.moveTo(r.Width-50, r.Height-25)
+	r.lineTo(r.Width-25, r.Height-25)
+	r.lineTo(r.Width-25, r.Height-50)
+	r.arc(r.Width-50, r.Height-50, 25, 0, 0.5*math.Pi)
+	r.setFillStyle("#D9D9D9")
+	r.fill()
+
+	// Bottom left
+	r.beginPath()
+	r.moveTo(25, r.Height-50)
+	r.lineTo(25, r.Height-25)
+	r.lineTo(50, r.Height-25)
+	r.arc(50, r.Height-50, 25, 0.5*math.Pi, math.Pi)
+	r.setFillStyle("#D9D9D9")
+	r.fill()
+}
+
 func (r *Renderer) DrawHighlightedObject() {
-	if r.selectedNode != nil {
-		node := r.selectedNode
-		x, y := r.TranslateToPosition(node.Position)
+	if r.SelectedNode != nil {
+		node := r.SelectedNode
+		x, y := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
 		r.DrawCircle(x, y, 12, "red")
 		return
 	}
 
-	if r.selectedPath != nil {
-		path := r.selectedPath
+	if r.SelectedPath != nil {
+		path := r.SelectedPath
 		for i, node := range path.Nodes {
 			if i == len(path.Nodes)-1 {
 				break
@@ -158,8 +158,8 @@ func (r *Renderer) DrawHighlightedObject() {
 
 			nextNode := path.Nodes[i+1]
 
-			x1, y1 := r.TranslateToPosition(node.Position)
-			x2, y2 := r.TranslateToPosition(nextNode.Position)
+			x1, y1 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
+			x2, y2 := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, nextNode.Position)
 
 			r.DrawLine(x1, y1, x2, y2, 24, "red")
 		}
@@ -170,12 +170,12 @@ func (r *Renderer) DrawMap() {
 	// Draw terrain
 
 	// Draw roads
-	for _, path := range r.currentMap.Paths {
+	for _, path := range r.CurrentMap.Paths {
 		r.DrawPath(path)
 	}
 
 	// Draw nodes
-	for _, node := range r.currentMap.Nodes {
+	for _, node := range r.CurrentMap.Nodes {
 		r.DrawNode(node)
 	}
 
@@ -183,12 +183,14 @@ func (r *Renderer) DrawMap() {
 	r.DrawHighlightedObject()
 
 	// Draw road labels
-	for _, path := range r.currentMap.Paths {
+	for _, path := range r.CurrentMap.Paths {
 		r.DrawPathLabel(path)
 	}
 
 	// Draw node labels
-	for _, node := range r.currentMap.Nodes {
+	for _, node := range r.CurrentMap.Nodes {
 		r.DrawNodeLabel(node)
 	}
+
+	r.DrawBorder()
 }

@@ -2,7 +2,7 @@ package canvas
 
 func (r *Renderer) clear() {
 	r.batch = append(r.batch, []interface{}{
-		"call", "clearRect", 0, 0, r.width, r.height,
+		"call", "clearRect", 0, 0, r.Width, r.Height,
 	})
 }
 

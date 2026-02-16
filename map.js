@@ -5,6 +5,7 @@ class MapView {
 
     init() {
         this.initCanvas();
+        this.initInputs();
     }
 
     initCanvas() {
@@ -31,6 +32,28 @@ class MapView {
 
         window.addEventListener("resize", refreshSize);
         refreshSize();
+    }
+
+    initInputs() {
+        const searchPanel = document.createElement("div");
+        searchPanel.classList.add("search")
+
+        const searchInput = document.createElement("input");
+        const searchButton = document.createElement("button");
+
+        searchInput.id = "search-input"
+        searchInput.placeholder = "Search Bailey Maps";
+        searchInput.type = "text";
+        searchButton.textContent = "🔎";
+
+        searchButton.addEventListener("click", () => {
+            engine.buttonPress("Search");
+        });
+
+        searchPanel.appendChild(searchInput);
+        searchPanel.appendChild(searchButton);
+
+        this.root.appendChild(searchPanel);
     }
 
     drawBatch(rawBatch) {

@@ -15,51 +15,39 @@ type Renderer struct {
 	ctx    js.Value
 
 	// Map fields
-	currentMap models.Map
+	CurrentMap models.Map
 
 	// Batching fields
 	batcher js.Value
 	batch   [][]interface{}
 
 	// Viewport fields
-	width, height int
+	Width, Height int
 
 	// Camera fields
-	lat, lon float64
-	zoom     float64
-
-	// Panning fields
-	holding            bool
-	panning            bool
-	startLat, startLon float64
-	startX, startY     int
+	Lat, Lon float64
+	Zoom     float64
 
 	// Interaction fields
-	selectedNode *models.Node
-	selectedPath *models.Path
+	SelectedNode *models.Node
+	SelectedPath *models.Path
 }
 
 func NewRenderer(m models.Map) *Renderer {
 	return &Renderer{
 		batch:      make([][]interface{}, 0),
-		currentMap: m,
+		CurrentMap: m,
 
-		lat:  -37.814174,
-		lon:  144.963154,
-		zoom: 16.0,
+		Lat:  -37.814174,
+		Lon:  144.963154,
+		Zoom: 16.0,
 	}
 }
 
 func (r *Renderer) Init(this js.Value, args []js.Value) interface{} {
-	if len(args) != 3 {
-		return nil
-	}
-
 	r.canvas = args[0]
 	r.batcher = args[1]
 	r.ctx = args[2]
-
-	r.addCanvasListeners()
 
 	return nil
 }
@@ -69,8 +57,8 @@ func (r *Renderer) UpdateViewport(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 
-	r.width = args[0].Int()
-	r.height = args[1].Int()
+	r.Width = args[0].Int()
+	r.Height = args[1].Int()
 
 	return nil
 }
@@ -92,7 +80,7 @@ func (r *Renderer) Draw() {
 
 func (r *Renderer) Clear() {
 	r.beginPath()
-	r.rect(0, 0, r.width, r.height)
+	r.rect(0, 0, r.Width, r.Height)
 	r.setFillStyle("#272727")
 	r.fill()
 }
