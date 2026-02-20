@@ -8,6 +8,13 @@ import (
 	"github.com/baely/memap/internal/util"
 )
 
+type cursorMode int
+
+const (
+	cursorModeDefault cursorMode = iota
+	cursorModeCreateNode
+)
+
 type editor struct {
 	// Canvas fields
 	canvas js.Value
@@ -24,11 +31,16 @@ type editor struct {
 
 	// Edit fields
 	cursorX, cursorY int
+
+	// Cursor mode
+	cursorMode cursorMode
 }
 
-func newEditor(renderer *canvas.Renderer) *editor {
+func NewEditor(renderer *canvas.Renderer) Interactor {
 	return &editor{
 		Renderer: renderer,
+
+		cursorMode: cursorModeDefault,
 	}
 }
 
@@ -38,6 +50,13 @@ func (e *editor) Init(this js.Value, args []js.Value) interface{} {
 	e.canvas.Get("style").Set("cursor", "none")
 
 	return e
+}
+
+func (e *editor) GetMenuItems() []InteractorMenu {
+	return []InteractorMenu{
+		{"⬇️", "download"},
+		{"❌", "view"},
+	}
 }
 
 func (e *editor) snapCursor(event js.Value) (int, int) {
@@ -58,6 +77,7 @@ func (e *editor) MouseDown(this js.Value, args []js.Value) interface{} {
 	x, y := e.snapCursor(event)
 
 	e.click(x, y)
+	e.DrawCursor(x, y, "red")
 
 	e.holding = true
 
@@ -175,9 +195,7 @@ func (e *editor) Wheel(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func (e *editor) ButtonPress(this js.Value, args []js.Value) interface{} {
-	button := args[0].String()
-
+func (e *editor) ButtonPress(button string) interface{} {
 	switch button {
 	case "download":
 		e.download()
@@ -213,6 +231,10 @@ func (e *editor) download() {
 
 	// Clean up the object URL
 	js.Global().Get("URL").Call("revokeObjectURL", url)
+}
+
+func (e *editor) swapMode(mode int) {
+	e.cursorMode = cursorMode(mode)
 }
 
 func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Path, int, int) {
