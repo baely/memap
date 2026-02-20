@@ -12,6 +12,7 @@ import (
 type Renderer struct {
 	// Canvas fields
 	canvas js.Value
+	jsMap  js.Value
 	ctx    js.Value
 
 	// Map fields
@@ -29,8 +30,8 @@ type Renderer struct {
 	Zoom     float64
 
 	// Interaction fields
-	SelectedNode *models.Node
-	SelectedPath *models.Path
+	selectedNode *models.Node
+	selectedPath *models.Path
 }
 
 func NewRenderer(m *models.Map) *Renderer {
@@ -46,8 +47,10 @@ func NewRenderer(m *models.Map) *Renderer {
 
 func (r *Renderer) Init(this js.Value, args []js.Value) interface{} {
 	r.canvas = args[0]
-	r.batcher = args[1]
-	r.ctx = args[2]
+	r.jsMap = args[1]
+
+	r.batcher = r.jsMap.Get("drawBatch").Call("bind", r.jsMap)
+	r.ctx = r.jsMap.Get("ctx")
 
 	return nil
 }
@@ -86,6 +89,28 @@ func (r *Renderer) Clear() {
 	r.rect(0, 0, r.Width, r.Height)
 	r.setFillStyle("#272727")
 	r.fill()
+}
+
+func (r *Renderer) GetSelectedNode() *models.Node {
+	return r.selectedNode
+}
+
+func (r *Renderer) SetSelectedNode(node *models.Node) {
+	r.selectedNode = node
+
+	if r.selectedNode == nil {
+		r.jsMap.Call("hideInfoPanel")
+		return
+	}
+	r.jsMap.Call("showInfoPanel", node.Label, node.Link, node.Description)
+}
+
+func (r *Renderer) GetSelectedPath() *models.Path {
+	return r.selectedPath
+}
+
+func (r *Renderer) SetSelectedPath(path *models.Path) {
+	r.selectedPath = path
 }
 
 func (r *Renderer) DrawLine(x0, y0, x1, y1 int, width int, strokeStyle string) {

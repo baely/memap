@@ -84,13 +84,13 @@ func (e *editor) MouseDown(this js.Value, args []js.Value) interface{} {
 	e.startX = x
 	e.startY = y
 
-	if node, _, _, _ := e.findClosest(x, y, 25); node != e.SelectedNode {
-		e.SelectedNode = nil
+	if node, _, _, _ := e.findClosest(x, y, 25); node != e.GetSelectedNode() {
+		e.SetSelectedNode(nil)
 	}
 
-	if e.SelectedNode != nil {
-		e.startLat = e.SelectedNode.Position.Latitude
-		e.startLon = e.SelectedNode.Position.Longitude
+	if e.GetSelectedNode() != nil {
+		e.startLat = e.GetSelectedNode().Position.Latitude
+		e.startLon = e.GetSelectedNode().Position.Longitude
 	} else {
 		e.startLat = e.Lat
 		e.startLon = e.Lon
@@ -127,7 +127,7 @@ func (e *editor) MouseMove(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 
-	if e.SelectedNode != nil {
+	if e.GetSelectedNode() != nil {
 		e.moveNode(e.startLat+deltaLat, e.startLon+deltaLon)
 	} else {
 		e.Lat = e.startLat - deltaLat
@@ -141,8 +141,8 @@ func (e *editor) MouseMove(this js.Value, args []js.Value) interface{} {
 }
 
 func (e *editor) moveNode(lat, lon float64) {
-	e.SelectedNode.Position.Latitude = lat
-	e.SelectedNode.Position.Longitude = lon
+	e.GetSelectedNode().Position.Latitude = lat
+	e.GetSelectedNode().Position.Longitude = lon
 }
 
 func (e *editor) MouseUp(this js.Value, args []js.Value) interface{} {
@@ -246,7 +246,7 @@ func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Pa
 
 	// Find the first node
 	for _, node := range e.CurrentMap.Nodes {
-		if e.panning && node == e.SelectedNode {
+		if e.panning && node == e.GetSelectedNode() {
 			continue
 		}
 
@@ -267,7 +267,7 @@ func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Pa
 
 	// Find the first path
 	for _, path := range e.CurrentMap.Paths {
-		if e.panning && path == e.SelectedPath {
+		if e.panning && path == e.GetSelectedPath() {
 			continue
 		}
 
@@ -305,15 +305,15 @@ func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Pa
 func (e *editor) click(x, y int) {
 	const threshold2 = 144 // 12px squared
 
-	e.SelectedNode = nil
-	e.SelectedPath = nil
+	e.SetSelectedNode(nil)
+	e.SetSelectedPath(nil)
 
 	node, path, _, _ := e.findClosest(x, y, threshold2)
 
 	if node != nil {
-		e.SelectedNode = node
+		e.SetSelectedNode(node)
 	} else if path != nil {
-		e.SelectedPath = path
+		e.SetSelectedPath(path)
 	}
 
 	e.Draw()

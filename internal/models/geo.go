@@ -6,9 +6,11 @@ type Position struct {
 }
 
 type Node struct {
-	Id       int
-	Label    string
-	Position *Position
+	Id          int
+	Label       string
+	Link        string
+	Description string
+	Position    *Position
 }
 
 type PathType string

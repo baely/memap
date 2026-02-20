@@ -85,7 +85,8 @@ var (
 	victoriaExhibition = &Node{Label: "Victoria & Exhibition", Position: &Position{-37.807048, 144.968284}}
 
 	// --- Other nodes ---
-	work = &Node{Label: "Work", Position: &Position{-37.816089, 144.961657}}
+	work = &Node{Label: "Work", Link: "https://www.atlassian.com", Description: "This description needs to be populated.",
+		Position: &Position{-37.816089, 144.961657}}
 )
 
 // --- Street paths ---

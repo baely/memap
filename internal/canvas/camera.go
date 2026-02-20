@@ -142,15 +142,15 @@ func (r *Renderer) DrawBorder() {
 }
 
 func (r *Renderer) DrawHighlightedObject() {
-	if r.SelectedNode != nil {
-		node := r.SelectedNode
+	if r.selectedNode != nil {
+		node := r.selectedNode
 		x, y := util.TranslateToPosition(r.Lat, r.Lon, r.Zoom, r.Width, r.Height, node.Position)
 		r.DrawCircle(x, y, 12, "red")
 		return
 	}
 
-	if r.SelectedPath != nil {
-		path := r.SelectedPath
+	if r.selectedPath != nil {
+		path := r.selectedPath
 		for i, node := range path.Nodes {
 			if i == len(path.Nodes)-1 {
 				break

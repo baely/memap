@@ -5,6 +5,7 @@ class MapView {
 
     init() {
         this.initSidebarInputs();
+        this.initInfoPanel();
         this.initCanvas();
         this.initInputs();
     }
@@ -14,7 +15,7 @@ class MapView {
         this.root.appendChild(canvas);
 
         this.ctx = canvas.getContext("2d");
-        engine.initRenderer(canvas, this.drawBatch.bind(this), this.ctx);
+        engine.initRenderer(canvas, this);
 
         const ratio = window.devicePixelRatio || 1;
         let refreshSize = () => {
@@ -64,6 +65,45 @@ class MapView {
 
         this.root.appendChild(sidebarPanel);
     }
+
+    initInfoPanel() {
+        const infoPanel = document.createElement("div");
+        infoPanel.id = "info-panel";
+        infoPanel.classList.add("info-panel");
+
+        const titleText = document.createElement("div");
+        titleText.classList.add("title");
+
+        const linkText = document.createElement("div");
+        linkText.classList.add("link");
+
+        const linkDOM = document.createElement("a");
+        linkDOM.setAttribute("target", "_blank");
+        linkText.appendChild(linkDOM);
+
+        const descriptionText = document.createElement("div");
+        descriptionText.classList.add("description");
+
+        infoPanel.appendChild(titleText);
+        infoPanel.appendChild(linkText);
+        infoPanel.appendChild(descriptionText);
+
+        this.showInfoPanel = (title, link, description) => {
+            titleText.innerText = title;
+            linkDOM.innerText = link;
+            linkDOM.setAttribute("href", link);
+            descriptionText.innerText = description;
+
+            infoPanel.style.display = "block";
+        }
+        this.hideInfoPanel = () => {
+            infoPanel.style.display = "none";
+        }
+
+        this.hideInfoPanel();
+        this.root.appendChild(infoPanel);
+    }
+
     drawBatch(rawBatch) {
         const batch = JSON.parse(rawBatch);
 

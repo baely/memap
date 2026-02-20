@@ -151,8 +151,8 @@ func (v *viewer) ButtonPress(button string) interface{} {
 func (v *viewer) click(x, y int) {
 	const threshold2 = 144 // 12px squared
 
-	v.SelectedNode = nil
-	v.SelectedPath = nil
+	v.SetSelectedNode(nil)
+	v.SetSelectedPath(nil)
 
 	// Find the first node
 	for _, node := range v.CurrentMap.Nodes {
@@ -164,7 +164,7 @@ func (v *viewer) click(x, y int) {
 		distance2 := dx*dx + dy*dy
 
 		if distance2 <= threshold2 {
-			v.SelectedNode = node
+			v.SetSelectedNode(node)
 			break
 		}
 	}
@@ -184,12 +184,12 @@ func (v *viewer) click(x, y int) {
 			distance2, _, _ := distance2ToLine(x, y, x1, y1, x2, y2)
 
 			if distance2 <= threshold2 {
-				v.SelectedPath = path
+				v.SetSelectedPath(path)
 				break
 			}
 		}
 
-		if v.SelectedPath != nil {
+		if v.GetSelectedPath() != nil {
 			break
 		}
 	}
