@@ -15,3 +15,12 @@ A web map with fictional geography
 - [ ] physical controls
 - [ ] zoom to
 - [ ] search
+
+### tools
+
+| tool      | hover   | click n drag  | click                 | additional   |
+|-----------|---------|---------------|-----------------------|--------------|
+| edit      | snap to | move node     | highlight node / path | none         |
+| new node  | no snap | move new node | place node            | none         |
+| draw path | snap to | move new node | place node            | stop drawing |
+| demo      | snap to | nothing       | delete node           | none         |

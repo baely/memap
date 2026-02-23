@@ -13,12 +13,13 @@ type cursorMode int
 const (
 	cursorModeDefault cursorMode = iota
 	cursorModeCreateNode
+	cursorModeDrawPath
+	cursorModeDemo
 )
 
 type editor struct {
 	// Canvas fields
 	canvas js.Value
-	//currentMap models.Map
 
 	// Renderer fields
 	*canvas.Renderer
@@ -54,8 +55,11 @@ func (e *editor) Init(this js.Value, args []js.Value) interface{} {
 
 func (e *editor) GetMenuItems() []InteractorMenu {
 	return []InteractorMenu{
-		{"⬇️", "download"},
-		{"❌", "view"},
+		{"⬇️", "download", e.download},
+		{"✳️", "newNode", e.updateCursorMode(cursorModeCreateNode)},
+		{"🛣️", "drawPath", e.updateCursorMode(cursorModeDrawPath)},
+		{"💣", "demo", e.updateCursorMode(cursorModeDemo)},
+		{"❌", "view", nil},
 	}
 }
 
@@ -63,11 +67,11 @@ func (e *editor) snapCursor(event js.Value) (int, int) {
 	x := event.Get("clientX").Int()
 	y := event.Get("clientY").Int()
 
-	if e.panning {
+	if e.panning || e.cursorMode == cursorModeCreateNode {
 		return x, y
 	}
 
-	_, _, newX, newY := e.findClosest(x, y, 652)
+	_, _, newX, newY := e.findClosest(x, y, 625)
 
 	return newX, newY
 }
@@ -77,7 +81,7 @@ func (e *editor) MouseDown(this js.Value, args []js.Value) interface{} {
 	x, y := e.snapCursor(event)
 
 	e.click(x, y)
-	e.DrawCursor(x, y, "red")
+	e.DrawCursor(x, y, e.getCursorColour())
 
 	e.holding = true
 
@@ -85,7 +89,7 @@ func (e *editor) MouseDown(this js.Value, args []js.Value) interface{} {
 	e.startY = y
 
 	if node, _, _, _ := e.findClosest(x, y, 25); node != e.GetSelectedNode() {
-		e.SetSelectedNode(nil)
+		e.SetSelectedNode(nil, false, nil)
 	}
 
 	if e.GetSelectedNode() != nil {
@@ -104,7 +108,8 @@ func (e *editor) MouseMove(this js.Value, args []js.Value) interface{} {
 	x, y := e.snapCursor(event)
 
 	e.Draw()
-	e.DrawCursor(x, y, "red")
+	e.DrawCursor(x, y, e.getCursorColour())
+	e.DrawCursor(x, y, e.getCursorColour())
 
 	if !e.holding {
 		return nil
@@ -135,7 +140,7 @@ func (e *editor) MouseMove(this js.Value, args []js.Value) interface{} {
 	}
 
 	e.Draw()
-	e.DrawCursor(x, y, "red")
+	e.DrawCursor(x, y, e.getCursorColour())
 
 	return nil
 }
@@ -149,16 +154,10 @@ func (e *editor) MouseUp(this js.Value, args []js.Value) interface{} {
 	event := args[0]
 	x, y := e.snapCursor(event)
 
-	//if !e.panning {
-	// Click event
-	//e.click(x, y)
-	//}
-
 	e.holding = false
 	e.panning = false
-	//e.canvas.Get("style").Set("cursor", "grab")
 
-	e.DrawCursor(x, y, "red")
+	e.DrawCursor(x, y, e.getCursorColour())
 
 	return nil
 }
@@ -166,7 +165,6 @@ func (e *editor) MouseUp(this js.Value, args []js.Value) interface{} {
 func (e *editor) MouseLeave(this js.Value, args []js.Value) interface{} {
 	e.panning = false
 	e.holding = false
-	//e.canvas.Get("style").Set("cursor", "grab")
 
 	return nil
 }
@@ -196,11 +194,6 @@ func (e *editor) Wheel(this js.Value, args []js.Value) interface{} {
 }
 
 func (e *editor) ButtonPress(button string) interface{} {
-	switch button {
-	case "download":
-		e.download()
-	}
-
 	return nil
 }
 
@@ -233,8 +226,29 @@ func (e *editor) download() {
 	js.Global().Get("URL").Call("revokeObjectURL", url)
 }
 
-func (e *editor) swapMode(mode int) {
-	e.cursorMode = cursorMode(mode)
+func (e *editor) updateCursorMode(cursorMode cursorMode) func() {
+	return func() {
+		if e.cursorMode == cursorMode {
+			e.cursorMode = cursorModeDefault
+			return
+		}
+		e.cursorMode = cursorMode
+	}
+}
+
+func (e *editor) getCursorColour() string {
+	switch e.cursorMode {
+	case cursorModeDefault:
+		return "red"
+	case cursorModeCreateNode:
+		return "white"
+	case cursorModeDrawPath:
+		return "white"
+	case cursorModeDemo:
+		return "yellow"
+	}
+
+	return "green"
 }
 
 func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Path, int, int) {
@@ -284,7 +298,6 @@ func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Pa
 			distance2, nearX, nearY := distance2ToLine(x, y, x1, y1, x2, y2)
 
 			if distance2 <= threshold2 && distance2 <= minDistance {
-				//return nil, &path, nearX, nearY
 				minDistance = distance2
 				closestPath = path
 				closestX = nearX
@@ -302,18 +315,54 @@ func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Pa
 	return closestNode, closestPath, closestX, closestY
 }
 
+func (e *editor) updateNodeCallback(this js.Value, args []js.Value) interface{} {
+	label := args[0].String()
+	link := args[1].String()
+	description := args[2].String()
+
+	node := e.GetSelectedNode()
+
+	if node == nil {
+		return nil
+	}
+
+	node.Label = label
+	node.Link = link
+	node.Description = description
+
+	e.Draw()
+
+	return nil
+}
+
+func (e *editor) updatePathCallback(this js.Value, args []js.Value) interface{} {
+	label := args[0].String()
+
+	path := e.GetSelectedPath()
+
+	if path == nil {
+		return nil
+	}
+
+	path.Label = label
+
+	e.Draw()
+
+	return nil
+}
+
 func (e *editor) click(x, y int) {
 	const threshold2 = 144 // 12px squared
 
-	e.SetSelectedNode(nil)
-	e.SetSelectedPath(nil)
+	e.SetSelectedNode(nil, false, nil)
+	e.SetSelectedPath(nil, false, nil)
 
 	node, path, _, _ := e.findClosest(x, y, threshold2)
 
 	if node != nil {
-		e.SetSelectedNode(node)
+		e.SetSelectedNode(node, true, e.updateNodeCallback)
 	} else if path != nil {
-		e.SetSelectedPath(path)
+		e.SetSelectedPath(path, true, e.updatePathCallback)
 	}
 
 	e.Draw()

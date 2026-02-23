@@ -88,16 +88,68 @@ class MapView {
         infoPanel.appendChild(linkText);
         infoPanel.appendChild(descriptionText);
 
+        let outerCallback;
+        const doCallback = (e) => {
+            if (e.key === "Enter") {
+                e.target.innerText = e.target.innerText.slice(0, -1);
+                e.target.blur();
+            }
+            outerCallback(
+                titleText.innerText,
+                linkDOM.innerText,
+                descriptionText.innerText,
+            );
+        }
+
         this.showInfoPanel = (title, link, description) => {
             titleText.innerText = title;
             linkDOM.innerText = link;
             linkDOM.setAttribute("href", link);
             descriptionText.innerText = description;
 
+            titleText.contentEditable = "false";
+            linkText.contentEditable = "false";
+            descriptionText.contentEditable = "false";
+
+            linkText.style.display = link == null ? "none" : "block";
+            descriptionText.style.display = description == null ? "none" : "block";
+
+            infoPanel.style.display = "block";
+        }
+        this.showEditPanel = (title, link, description, callback) => {
+            titleText.innerText = title;
+            linkDOM.innerText = link;
+            linkDOM.removeAttribute("href");
+            descriptionText.innerText = description;
+
+            titleText.contentEditable = "plaintext-only";
+            linkDOM.contentEditable = "plaintext-only";
+            descriptionText.contentEditable = "plaintext-only";
+
+            outerCallback = callback;
+            titleText.addEventListener("keyup", doCallback);
+            if (link == null) {
+                linkText.style.display = "none";
+            } else {
+                linkText.style.display = "none";
+                linkDOM.addEventListener("keyup", doCallback);
+            }
+            if (description == null) {
+                descriptionText.style.display = "none";
+            } else {
+                descriptionText.style.display = "block";
+                descriptionText.addEventListener("keyup", doCallback);
+            }
+
             infoPanel.style.display = "block";
         }
         this.hideInfoPanel = () => {
             infoPanel.style.display = "none";
+
+            titleText.removeEventListener("keyup", doCallback);
+            linkText.removeEventListener("keyup", doCallback);
+            descriptionText.removeEventListener("keyup", doCallback);
+            outerCallback = false;
         }
 
         this.hideInfoPanel();

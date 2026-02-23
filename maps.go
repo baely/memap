@@ -58,6 +58,10 @@ func (g *GeoMap) drawMenu() {
 				return nil
 			}
 
+			if menuItem.Callback != nil {
+				menuItem.Callback()
+			}
+
 			return g.ButtonPress(menuItem.Title)
 		}))
 		menuPanel.Call("appendChild", button)

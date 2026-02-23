@@ -7,8 +7,9 @@ import (
 )
 
 type InteractorMenu struct {
-	Label string
-	Title string
+	Label    string
+	Title    string
+	Callback func()
 }
 
 type Interactor interface {

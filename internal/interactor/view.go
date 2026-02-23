@@ -37,7 +37,7 @@ func (v *viewer) Init(this js.Value, args []js.Value) interface{} {
 
 func (v *viewer) GetMenuItems() []InteractorMenu {
 	return []InteractorMenu{
-		{"✏️️", "edit"},
+		{"✏️️", "edit", nil},
 	}
 }
 
@@ -151,8 +151,8 @@ func (v *viewer) ButtonPress(button string) interface{} {
 func (v *viewer) click(x, y int) {
 	const threshold2 = 144 // 12px squared
 
-	v.SetSelectedNode(nil)
-	v.SetSelectedPath(nil)
+	v.SetSelectedNode(nil, false, nil)
+	v.SetSelectedPath(nil, false, nil)
 
 	// Find the first node
 	for _, node := range v.CurrentMap.Nodes {
@@ -164,7 +164,7 @@ func (v *viewer) click(x, y int) {
 		distance2 := dx*dx + dy*dy
 
 		if distance2 <= threshold2 {
-			v.SetSelectedNode(node)
+			v.SetSelectedNode(node, false, nil)
 			break
 		}
 	}
@@ -184,7 +184,7 @@ func (v *viewer) click(x, y int) {
 			distance2, _, _ := distance2ToLine(x, y, x1, y1, x2, y2)
 
 			if distance2 <= threshold2 {
-				v.SetSelectedPath(path)
+				v.SetSelectedPath(path, false, nil)
 				break
 			}
 		}

@@ -95,13 +95,19 @@ func (r *Renderer) GetSelectedNode() *models.Node {
 	return r.selectedNode
 }
 
-func (r *Renderer) SetSelectedNode(node *models.Node) {
+func (r *Renderer) SetSelectedNode(node *models.Node, edit bool, editCallback func(this js.Value, args []js.Value) interface{}) {
 	r.selectedNode = node
 
 	if r.selectedNode == nil {
 		r.jsMap.Call("hideInfoPanel")
 		return
 	}
+
+	if edit {
+		r.jsMap.Call("showEditPanel", node.Label, node.Link, node.Description, js.FuncOf(editCallback))
+		return
+	}
+
 	r.jsMap.Call("showInfoPanel", node.Label, node.Link, node.Description)
 }
 
@@ -109,8 +115,24 @@ func (r *Renderer) GetSelectedPath() *models.Path {
 	return r.selectedPath
 }
 
-func (r *Renderer) SetSelectedPath(path *models.Path) {
+func (r *Renderer) SetSelectedPath(path *models.Path, edit bool, editCallback func(this js.Value, args []js.Value) interface{}) {
 	r.selectedPath = path
+
+	if r.selectedNode != nil {
+		return
+	}
+
+	if r.selectedPath == nil {
+		r.jsMap.Call("hideInfoPanel")
+		return
+	}
+
+	if edit {
+		r.jsMap.Call("showEditPanel", path.Label, nil, nil, js.FuncOf(editCallback))
+		return
+	}
+
+	r.jsMap.Call("showInfoPanel", path.Label, nil, nil)
 }
 
 func (r *Renderer) DrawLine(x0, y0, x1, y1 int, width int, strokeStyle string) {

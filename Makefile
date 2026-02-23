@@ -1,11 +1,11 @@
 build:
-	GOOS=js GOARCH=wasm go build -ldflags "-X main.EditMode=false" -o maps.wasm .
+	GOOS=js GOARCH=wasm go build -o maps.wasm .
 
 build-edit:
 	GOOS=js GOARCH=wasm go build -ldflags "-X main.EditMode=true" -o editor.wasm .
 
-build-all: build build-edit
+build-all: build
 
 deploy: build-all
-	cp index.html map.js maps.wasm editor.wasm wasm_exec.js ./public
+	cp index.html map.js maps.wasm wasm_exec.js ./public
 	firebase deploy
