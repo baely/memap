@@ -12,26 +12,14 @@ type GeoMap struct {
 	ctx js.Value
 
 	*canvas.Renderer
-	interactor.Interactor
+	interactorMode interactor.Mode
 }
 
-func (g *GeoMap) updateMode(modeString string) interface{} {
-	modes := map[string]func(renderer *canvas.Renderer) interactor.Interactor{
-		"view": interactor.NewViewer,
-		"edit": interactor.NewEditor,
-	}
+func (g *GeoMap) updateMode(mode interactor.Mode) interface{} {
+	g.interactorMode = mode
+	interactor.Get(mode).Init()
 
-	mode, ok := modes[modeString]
-	if !ok {
-		return nil
-	}
-
-	g.Interactor = mode(g.Renderer)
-	g.Interactor.Init(js.ValueOf(nil), []js.Value{
-		g.ctx,
-	})
 	g.Draw()
-
 	g.drawMenu()
 	return nil
 }
@@ -39,7 +27,7 @@ func (g *GeoMap) updateMode(modeString string) interface{} {
 const menuPanelID = "menu-panel"
 
 func (g *GeoMap) drawMenu() {
-	menuItems := g.GetMenuItems()
+	menuItems := interactor.Get(g.interactorMode).GetMenuItems()
 
 	document := js.Global().Get("document")
 
@@ -53,8 +41,8 @@ func (g *GeoMap) drawMenu() {
 		button := document.Call("createElement", "button")
 		button.Set("textContent", menuItem.Label)
 		button.Call("addEventListener", "click", js.FuncOf(func(this js.Value, args []js.Value) any {
-			if menuItem.Title == "view" || menuItem.Title == "edit" {
-				g.updateMode(menuItem.Title)
+			if menuItem.Mode != interactor.ModeUnspecified {
+				g.updateMode(menuItem.Mode)
 				return nil
 			}
 
@@ -62,30 +50,30 @@ func (g *GeoMap) drawMenu() {
 				menuItem.Callback()
 			}
 
-			return g.ButtonPress(menuItem.Title)
+			return nil
 		}))
 		menuPanel.Call("appendChild", button)
 	}
 }
 
 func (g *GeoMap) MouseDown(this js.Value, args []js.Value) interface{} {
-	return g.Interactor.MouseDown(this, args)
+	return interactor.Get(g.interactorMode).MouseDown(this, args)
 }
 
 func (g *GeoMap) MouseMove(this js.Value, args []js.Value) interface{} {
-	return g.Interactor.MouseMove(this, args)
+	return interactor.Get(g.interactorMode).MouseMove(this, args)
 }
 
 func (g *GeoMap) MouseUp(this js.Value, args []js.Value) interface{} {
-	return g.Interactor.MouseUp(this, args)
+	return interactor.Get(g.interactorMode).MouseUp(this, args)
 }
 
 func (g *GeoMap) MouseLeave(this js.Value, args []js.Value) interface{} {
-	return g.Interactor.MouseLeave(this, args)
+	return interactor.Get(g.interactorMode).MouseLeave(this, args)
 }
 
 func (g *GeoMap) Wheel(this js.Value, args []js.Value) interface{} {
-	return g.Interactor.Wheel(this, args)
+	return interactor.Get(g.interactorMode).Wheel(this, args)
 }
 
 func main() {
@@ -96,17 +84,18 @@ func main() {
 	m := &GeoMap{
 		js.ValueOf(nil),
 		renderer,
-		interactor.NewViewer(renderer),
+		interactor.ModeViewer,
 	}
 
 	js.Global().Set("engine", map[string]interface{}{
 		"initRenderer": js.FuncOf(func(this js.Value, args []js.Value) any {
 			thisCanvas := args[0]
 
+			interactor.Init(renderer, thisCanvas)
+
 			m.ctx = thisCanvas
 
 			m.Renderer.Init(this, args)
-			m.Interactor.Init(this, args)
 
 			thisCanvas.Call("addEventListener", "mousedown", js.FuncOf(m.MouseDown))
 			thisCanvas.Call("addEventListener", "mousemove", js.FuncOf(m.MouseMove))

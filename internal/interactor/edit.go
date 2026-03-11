@@ -37,30 +37,31 @@ type editor struct {
 	cursorMode cursorMode
 }
 
-func NewEditor(renderer *canvas.Renderer) Interactor {
+func NewEditor(renderer *canvas.Renderer, canvas js.Value) Interactor {
 	return &editor{
-		Renderer: renderer,
-
+		canvas:     canvas,
+		Renderer:   renderer,
 		cursorMode: cursorModeDefault,
 	}
 }
 
-func (e *editor) Init(this js.Value, args []js.Value) interface{} {
-	e.canvas = args[0]
-
+func (e *editor) Init() interface{} {
 	e.canvas.Get("style").Set("cursor", "none")
-
 	return e
 }
 
-func (e *editor) GetMenuItems() []InteractorMenu {
+func editorMenuItems(m *models.Map) []InteractorMenu {
 	return []InteractorMenu{
-		{"⬇️", "download", e.download},
-		{"✳️", "newNode", e.updateCursorMode(cursorModeCreateNode)},
-		{"🛣️", "drawPath", e.updateCursorMode(cursorModeDrawPath)},
-		{"💣", "demo", e.updateCursorMode(cursorModeDemo)},
-		{"❌", "view", nil},
+		{"⬇️", "Download", ModeUnspecified, util.DownloadFn(m)},
+		{"✳️", "New Node", ModeNewNode, nil},
+		{"🛣️", "Draw Path", ModeDrawPath, nil},
+		{"💣", "Demo", ModeDemo, nil},
+		{"❌", "View", ModeViewer, nil},
 	}
+}
+
+func (e *editor) GetMenuItems() []InteractorMenu {
+	return editorMenuItems(e.CurrentMap)
 }
 
 func (e *editor) snapCursor(event js.Value) (int, int) {
@@ -191,39 +192,6 @@ func (e *editor) Wheel(this js.Value, args []js.Value) interface{} {
 	e.Draw()
 
 	return nil
-}
-
-func (e *editor) ButtonPress(button string) interface{} {
-	return nil
-}
-
-func (e *editor) download() {
-	data, err := models.SerialiseMap(e.CurrentMap, "models", "SampleMap")
-	if err != nil {
-		js.Global().Get("console").Call("log", err.Error())
-	}
-
-	filename := "map.go"
-
-	// Create a Uint8Array from your byte slice
-	uint8Array := js.Global().Get("Uint8Array").New(len(data))
-	js.CopyBytesToJS(uint8Array, data)
-
-	// Create a blob from the array
-	array := js.Global().Get("Array").New(uint8Array)
-	blob := js.Global().Get("Blob").New(array)
-
-	// Create an object URL for the blob
-	url := js.Global().Get("URL").Call("createObjectURL", blob)
-
-	// Create a temporary anchor element and trigger download
-	a := js.Global().Get("document").Call("createElement", "a")
-	a.Set("href", url)
-	a.Set("download", filename)
-	a.Call("click")
-
-	// Clean up the object URL
-	js.Global().Get("URL").Call("revokeObjectURL", url)
 }
 
 func (e *editor) updateCursorMode(cursorMode cursorMode) func() {

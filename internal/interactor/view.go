@@ -23,21 +23,21 @@ type viewer struct {
 	startX, startY     int
 }
 
-func NewViewer(renderer *canvas.Renderer) Interactor {
+func NewViewer(renderer *canvas.Renderer, canvas js.Value) Interactor {
 	return &viewer{
+		canvas:   canvas,
 		Renderer: renderer,
 	}
 }
 
-func (v *viewer) Init(this js.Value, args []js.Value) interface{} {
-	v.canvas = args[0]
+func (v *viewer) Init() interface{} {
 	v.canvas.Get("style").Set("cursor", "grabbing")
 	return v
 }
 
 func (v *viewer) GetMenuItems() []InteractorMenu {
 	return []InteractorMenu{
-		{"✏️️", "edit", nil},
+		{"✏️️", "edit", ModeEdit, nil},
 	}
 }
 
@@ -138,12 +138,6 @@ func (v *viewer) Wheel(this js.Value, args []js.Value) interface{} {
 	}
 
 	v.Draw()
-
-	return nil
-}
-
-func (v *viewer) ButtonPress(button string) interface{} {
-	js.Global().Get("console").Call("log", "Button pressed:", button)
 
 	return nil
 }
