@@ -10,7 +10,7 @@ A web map with fictional geography
 - [x] show points of interest
 - [x] labels
 - [x] select
-- [ ] edit
+- [x] edit
 - [ ] styling
 - [ ] physical controls
 - [ ] zoom to

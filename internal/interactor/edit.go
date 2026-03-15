@@ -32,16 +32,12 @@ type editor struct {
 
 	// Edit fields
 	cursorX, cursorY int
-
-	// Cursor mode
-	cursorMode cursorMode
 }
 
 func NewEditor(renderer *canvas.Renderer, canvas js.Value) Interactor {
 	return &editor{
-		canvas:     canvas,
-		Renderer:   renderer,
-		cursorMode: cursorModeDefault,
+		canvas:   canvas,
+		Renderer: renderer,
 	}
 }
 
@@ -53,6 +49,7 @@ func (e *editor) Init() interface{} {
 func editorMenuItems(m *models.Map) []InteractorMenu {
 	return []InteractorMenu{
 		{"⬇️", "Download", ModeUnspecified, util.DownloadFn(m)},
+		{"✏️", "Edit", ModeEdit, nil},
 		{"✳️", "New Node", ModeNewNode, nil},
 		{"🛣️", "Draw Path", ModeDrawPath, nil},
 		{"💣", "Demo", ModeDemo, nil},
@@ -68,12 +65,11 @@ func (e *editor) snapCursor(event js.Value) (int, int) {
 	x := event.Get("clientX").Int()
 	y := event.Get("clientY").Int()
 
-	if e.panning || e.cursorMode == cursorModeCreateNode {
+	if e.panning {
 		return x, y
 	}
 
 	_, _, newX, newY := e.findClosest(x, y, 625)
-
 	return newX, newY
 }
 
@@ -82,7 +78,7 @@ func (e *editor) MouseDown(this js.Value, args []js.Value) interface{} {
 	x, y := e.snapCursor(event)
 
 	e.click(x, y)
-	e.DrawCursor(x, y, e.getCursorColour())
+	e.DrawCursor(x, y, "red")
 
 	e.holding = true
 
@@ -109,8 +105,8 @@ func (e *editor) MouseMove(this js.Value, args []js.Value) interface{} {
 	x, y := e.snapCursor(event)
 
 	e.Draw()
-	e.DrawCursor(x, y, e.getCursorColour())
-	e.DrawCursor(x, y, e.getCursorColour())
+	e.DrawCursor(x, y, "red")
+	e.DrawCursor(x, y, "red")
 
 	if !e.holding {
 		return nil
@@ -141,7 +137,7 @@ func (e *editor) MouseMove(this js.Value, args []js.Value) interface{} {
 	}
 
 	e.Draw()
-	e.DrawCursor(x, y, e.getCursorColour())
+	e.DrawCursor(x, y, "red")
 
 	return nil
 }
@@ -158,7 +154,7 @@ func (e *editor) MouseUp(this js.Value, args []js.Value) interface{} {
 	e.holding = false
 	e.panning = false
 
-	e.DrawCursor(x, y, e.getCursorColour())
+	e.DrawCursor(x, y, "red")
 
 	return nil
 }
@@ -192,31 +188,6 @@ func (e *editor) Wheel(this js.Value, args []js.Value) interface{} {
 	e.Draw()
 
 	return nil
-}
-
-func (e *editor) updateCursorMode(cursorMode cursorMode) func() {
-	return func() {
-		if e.cursorMode == cursorMode {
-			e.cursorMode = cursorModeDefault
-			return
-		}
-		e.cursorMode = cursorMode
-	}
-}
-
-func (e *editor) getCursorColour() string {
-	switch e.cursorMode {
-	case cursorModeDefault:
-		return "red"
-	case cursorModeCreateNode:
-		return "white"
-	case cursorModeDrawPath:
-		return "white"
-	case cursorModeDemo:
-		return "yellow"
-	}
-
-	return "green"
 }
 
 func (e *editor) findClosest(x, y int, threshold2 int) (*models.Node, *models.Path, int, int) {

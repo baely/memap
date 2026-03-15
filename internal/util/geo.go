@@ -50,3 +50,24 @@ func Distance(pos1, pos2 *models.Position) float64 {
 
 	return d
 }
+
+// Distance2ToRay returns the squared distance from point (px, py) to the ray
+// starting at (ox, oy) in direction (dx, dy). Only snaps forward (t > 0).
+func Distance2ToRay(px, py, ox, oy, dx, dy int) (int, int, int) {
+	dot := (px-ox)*dx + (py-oy)*dy
+	lenSq := dx*dx + dy*dy
+
+	if lenSq == 0 || dot <= 0 {
+		return px*px + py*py, px, py // effectively infinite distance
+	}
+
+	t := float64(dot) / float64(lenSq)
+
+	nearX := float64(ox) + t*float64(dx)
+	nearY := float64(oy) + t*float64(dy)
+
+	fx := float64(px) - nearX
+	fy := float64(py) - nearY
+
+	return int(fx*fx + fy*fy), int(nearX), int(nearY)
+}

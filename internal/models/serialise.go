@@ -17,32 +17,42 @@ func SerialiseMap(m *Map, packageName string, varName string) ([]byte, error) {
 		Lng   float64
 	}
 	nodeToVar := make(map[nodeKey]string)
+	nodeData := make(map[nodeKey]*Node)
 	var allNodes []nodeKey
 	usedNames := make(map[string]int)
 
-	addNode := func(n *Node) string {
+	addNode := func(n *Node, prefix string) string {
 		k := nodeKey{n.Label, n.Position.Latitude, n.Position.Longitude}
 		if v, ok := nodeToVar[k]; ok {
 			return v
 		}
-		name := labelToIdent(n.Label)
-		if count, exists := usedNames[name]; exists {
-			usedNames[name] = count + 1
-			name = fmt.Sprintf("%s%d", name, count+1)
+		base := labelToIdent(n.Label, prefix)
+		name := base
+		for usedNames[name] > 0 {
+			usedNames[base]++
+			name = fmt.Sprintf("%s_%d", base, usedNames[base])
 		}
 		usedNames[name]++
 		nodeToVar[k] = name
+		nodeData[k] = n
 		allNodes = append(allNodes, k)
 		return name
 	}
 
 	// Register standalone nodes first, then path nodes.
+	poiSet := make(map[nodeKey]bool)
 	for _, n := range m.Nodes {
-		addNode(n)
+		k := nodeKey{n.Label, n.Position.Latitude, n.Position.Longitude}
+		poiSet[k] = true
+		addNode(n, "n")
 	}
 	for _, p := range m.Paths {
 		for _, n := range p.Nodes {
-			addNode(n)
+			k := nodeKey{n.Label, n.Position.Latitude, n.Position.Longitude}
+			if poiSet[k] {
+				continue
+			}
+			addNode(n, "p")
 		}
 	}
 
@@ -50,10 +60,11 @@ func SerialiseMap(m *Map, packageName string, varName string) ([]byte, error) {
 	pathVarNames := make([]string, len(m.Paths))
 	usedPathNames := make(map[string]int)
 	for i, p := range m.Paths {
-		name := labelToIdent(p.Label)
-		if count, exists := usedPathNames[name]; exists {
-			usedPathNames[name] = count + 1
-			name = fmt.Sprintf("%s%d", name, count+1)
+		base := labelToIdent(p.Label, "p")
+		name := base
+		for usedPathNames[name] > 0 {
+			usedPathNames[base]++
+			name = fmt.Sprintf("%s_%d", base, usedPathNames[base])
 		}
 		usedPathNames[name]++
 		pathVarNames[i] = name
@@ -67,8 +78,15 @@ func SerialiseMap(m *Map, packageName string, varName string) ([]byte, error) {
 	buf.WriteString("var (\n")
 	for _, k := range allNodes {
 		name := nodeToVar[k]
-		fmt.Fprintf(&buf, "%s = &Node{Label: %q, Position: &Position{%v, %v}}\n",
-			name, k.Label, k.Lat, k.Lng)
+		n := nodeData[k]
+		fmt.Fprintf(&buf, "%s = &Node{Label: %q", name, k.Label)
+		if n.Link != "" {
+			fmt.Fprintf(&buf, ", Link: %q", n.Link)
+		}
+		if n.Description != "" {
+			fmt.Fprintf(&buf, ", Description: %q", n.Description)
+		}
+		fmt.Fprintf(&buf, ", Position: &Position{%v, %v}}\n", k.Lat, k.Lng)
 	}
 	buf.WriteString(")\n\n")
 
@@ -109,7 +127,7 @@ func SerialiseMap(m *Map, packageName string, varName string) ([]byte, error) {
 
 // labelToIdent converts a human label like "Flinders & Spencer" into a
 // camelCase Go identifier like "flindersSpencer".
-func labelToIdent(label string) string {
+func labelToIdent(label string, prefix string) string {
 	// Replace common separators with spaces for splitting.
 	r := strings.NewReplacer("&", " ", "-", " ", "_", " ")
 	label = r.Replace(label)
@@ -117,9 +135,9 @@ func labelToIdent(label string) string {
 
 	var parts []string
 	for _, w := range words {
-		// Strip non-alphanumeric characters.
+		// Strip non-ASCII and non-alphanumeric characters.
 		cleaned := strings.Map(func(r rune) rune {
-			if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			if r <= unicode.MaxASCII && (unicode.IsLetter(r) || unicode.IsDigit(r)) {
 				return r
 			}
 			return -1
@@ -131,21 +149,22 @@ func labelToIdent(label string) string {
 	}
 
 	if len(parts) == 0 {
-		return "n"
+		return strings.ToLower(prefix)
 	}
 
 	// First word fully lowered, subsequent words title-cased.
 	var b strings.Builder
 	b.WriteString(strings.ToLower(parts[0]))
 	for _, p := range parts[1:] {
-		b.WriteString(strings.ToUpper(p[:1]) + strings.ToLower(p[1:]))
+		runes := []rune(p)
+		b.WriteString(strings.ToUpper(string(runes[:1])) + strings.ToLower(string(runes[1:])))
 	}
 
 	ident := b.String()
 
-	// If it starts with a digit, prefix with 'n'.
+	// If it starts with a digit, add the prefix.
 	if len(ident) > 0 && unicode.IsDigit(rune(ident[0])) {
-		ident = "n" + ident
+		ident = strings.ToLower(prefix) + ident
 	}
 
 	return ident

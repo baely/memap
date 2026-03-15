@@ -89,11 +89,13 @@ class MapView {
         infoPanel.appendChild(descriptionText);
 
         let outerCallback;
-        const doCallback = (e) => {
+        const preventEnter = (e) => {
             if (e.key === "Enter") {
-                e.target.innerText = e.target.innerText.slice(0, -1);
+                e.preventDefault();
                 e.target.blur();
             }
+        };
+        const doCallback = (e) => {
             outerCallback(
                 titleText.innerText,
                 linkDOM.innerText,
@@ -108,6 +110,7 @@ class MapView {
             descriptionText.innerText = description;
 
             titleText.contentEditable = "false";
+            linkDOM.contentEditable = "false";
             linkText.contentEditable = "false";
             descriptionText.contentEditable = "false";
 
@@ -127,27 +130,34 @@ class MapView {
             descriptionText.contentEditable = "plaintext-only";
 
             outerCallback = callback;
+            titleText.addEventListener("keydown", preventEnter);
             titleText.addEventListener("keyup", doCallback);
             if (link == null) {
                 linkText.style.display = "none";
             } else {
-                linkText.style.display = "none";
+                linkText.style.display = "block";
+                linkDOM.addEventListener("keydown", preventEnter);
                 linkDOM.addEventListener("keyup", doCallback);
             }
             if (description == null) {
                 descriptionText.style.display = "none";
             } else {
                 descriptionText.style.display = "block";
+                descriptionText.addEventListener("keydown", preventEnter);
                 descriptionText.addEventListener("keyup", doCallback);
             }
 
             infoPanel.style.display = "block";
+            titleText.focus();
         }
         this.hideInfoPanel = () => {
             infoPanel.style.display = "none";
 
+            titleText.removeEventListener("keydown", preventEnter);
             titleText.removeEventListener("keyup", doCallback);
+            linkText.removeEventListener("keydown", preventEnter);
             linkText.removeEventListener("keyup", doCallback);
+            descriptionText.removeEventListener("keydown", preventEnter);
             descriptionText.removeEventListener("keyup", doCallback);
             outerCallback = false;
         }
